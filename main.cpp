@@ -29,6 +29,8 @@ int main(int argc, char *argv[]) {
 	float test[] = {0, 2, 0, 3, 0, 4, 0, 4, 0};
 	fft(test, 4, -1);
 	for (int i = 1; i <= 8; i = i + 2){
+		test[i] = test[i] / 4;
+		test[i+1] = test[i+1] / 4;
 		cout << test[i] << " " << test[i+1] << endl;
 	}
 
