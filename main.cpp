@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 {
 
 	char lenna[]   = "lenna.pgm";
-
-	//1.a
+/*
+	//1.a 
 	float test[] = {0, 2, 0, 3, 0, 4, 0, 4, 0};
 	fft(test, 4, -1);
 	//fft(test, 4, 1);
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		test[i+1] = test[i+1] / 4;
 		cout << test[i] << " " << test[i+1] << endl;
 	}
-
+*/
 	//1.b and 1.c
 	part1(true);
 	part1(false);
@@ -59,7 +59,9 @@ int main(int argc, char *argv[])
 	}
 
 	imgtodata(finImage, data);
+	//cout << "forward" << endl << endl;
 	fft2d(data, 256, 256, -1);
+	//cout << "inverse" << endl << endl;
 	fft2d(data, 256, 256, 1);
 	datatoimg(finImage, data);
 
@@ -83,6 +85,7 @@ void imgtodata(ImageType &image, float **data)
 		{
 			image.getPixelVal(i, (j - 1) / 2, temp);
 			data[i][j] = temp;
+			data[i][j + 1] = 0;
 		}
 	}
 }
@@ -271,9 +274,10 @@ void fft2d(float ** data, int size, unsigned long nn, int isign){
 	}
 	//copy to original array and do 1/N
 	for (int i = 0; i < size; i++){
-		for (int j = 1; i < size * 2 + 1; i = i + 2){
+		for (int j = 1; j < size * 2 + 1; j = j + 2){
 			data[i][j] = rowsdata[i][j] / size;
 			data[i][j + 1] = rowsdata[i][j + 1] / size;
+			//cout << data[i][j] << " " << data[i][j + 1] << endl;
 		}
 	}
 	//delete the dynamic 2d arrays
