@@ -13,6 +13,7 @@
 
 #include <math.h>
 #define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
+# define M_PI           3.14159265358979323846  /* pi */
 
 #include "image.h"
 
@@ -22,15 +23,23 @@ void readImage(char fname[], ImageType &image);
 void writeImage(char fname[], ImageType &image);
 void fft(float data[], unsigned long nn, int isign);
 
-void format(ImageType &image);
+void part1(bool b);
 
 int main(int argc, char *argv[]) {
+
+
 	char lenna[]   = "lenna.pgm";
+
+	//1.a
 	float test[] = {0, 2, 0, 3, 0, 4, 0, 4, 0};
 	fft(test, 4, -1);
 	for (int i = 1; i <= 8; i = i + 2){
 		cout << test[i] << " " << test[i+1] << endl;
 	}
+
+	//1.b and 1.c
+	part1(true);
+	part1(false);
 
 
 	return 0;
@@ -103,3 +112,72 @@ void fft(float data[], unsigned long nn, int isign)
 }
 #undef SWAP
 /* (C) Copr. 1986-92 Numerical Recipes Software 0#Y". */
+
+void part1(bool b){
+	float data [257];
+	char part;
+	if(b){ //1.b
+		part = 'b';
+		ofstream file("cosine.csv");
+		for (int i = 1; i < 257; i = i + 2){
+			data [i] = cos((2 * 8 * M_PI * (i / 2) / 128));
+			data [i + 1] = 0;
+			//cout << data[i] << " " << data[i + 1] << endl;
+			file << data[i] << endl;
+			data [i] = data[i]  * pow(-1, i/2);
+		}
+		file.close();
+	}
+	if(!b){ //1.c
+		part = 'c';
+		ofstream file("rect.csv");
+		for (int i = 1; i < 65; i = i + 2){
+			data[i] = 0;
+			data[i + 1] = 0;
+			//cout << data[i] << " " << data[i + 1] << endl;
+			file << data[i] << endl;
+		}
+		for (int i = 65; i < 193; i = i + 2){
+			data[i] = 1 * pow(-1, i/2);
+			data[i + 1] = 0;
+			//cout << data[i] << " " << data[i + 1] << endl;
+			file << data[i] << endl;
+		}
+		for (int i = 193; i < 257; i = i + 2){
+			data[i] = 0;
+			data[i + 1] = 0;
+			//cout << data[i] << " " << data[i + 1] << endl;
+			file << data[i] << endl;
+		}
+		file.close();
+	}
+
+	char mag[] = "xmagnitude.csv";
+	mag[0] = part;
+	ofstream magfile(mag);
+	char pha[] = "xphase.csv";
+	pha[0] = part;
+	ofstream phafile(pha);
+	char rea[] = "xreal.csv";
+	rea[0] = part;
+	ofstream reafile(rea);
+	char ima[] = "ximaginary.csv";
+	ima[0] = part;
+	ofstream imafile(ima);
+
+	fft(data, 128, -1);
+
+	for (int i = 1; i < 257; i = i + 2){
+		data[i] = data[i] / 128;
+		data[i + 1] = data[i + 1] / 128;
+		reafile << data[i] << endl;
+		imafile << data[i + 1] << endl;
+		magfile << sqrt((data[i] * data[i]) + (data[i + 1] * data[i + 1]))<< endl;
+		phafile << atan2(data[i + 1],  data[i])<< endl;
+	}
+
+	magfile.close();
+	phafile.close();
+	reafile.close();
+	imafile.close();
+}
