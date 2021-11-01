@@ -25,10 +25,12 @@ void fft(float data[], unsigned long nn, int isign);
 
 void part1(bool b);
 
-void fft2d(ImageType &image, int size, unsigned long nn, int isign);
+void fft2d(float **data, int size, unsigned long nn, int isign);
+void imgtodata(ImageType &image, float **data);
+void datatoimg(ImageType &image, float **data);
 
-int main(int argc, char *argv[]) {
-
+int main(int argc, char *argv[])
+{
 
 	char lenna[]   = "lenna.pgm";
 
@@ -46,8 +48,56 @@ int main(int argc, char *argv[]) {
 	part1(true);
 	part1(false);
 
+	// Part 2
+	ImageType finImage(256, 256, 255);
+	readImage(lenna, finImage);
+	float **data = new float *[256];
 
-	return 0;
+	for (int i = 0; i < 256; i++)
+	{
+		data[i] = new float[513];
+	}
+
+	imgtodata(finImage, data);
+	fft2d(data, 256, 256, -1);
+	fft2d(data, 256, 256, 1);
+	datatoimg(finImage, data);
+
+	char fname[] = "part2.pgm";
+	writeImage(fname, finImage);
+
+	for (int i = 0; i < 256; ++i)
+	{
+		delete[] data[i];
+	}
+
+	delete[] data;
+}
+
+void imgtodata(ImageType &image, float **data)
+{
+	int temp = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		for (int j = 1; j < 513; j += 2)
+		{
+			image.getPixelVal(i, (j - 1) / 2, temp);
+			data[i][j] = temp;
+		}
+	}
+}
+
+void datatoimg(ImageType &image, float **data)
+{
+	int temp = 0;
+	for (int i = 0; i < 256; i++)
+	{
+		for (int j = 1; j < 513; j += 2)
+		{
+			temp = data[i][j];
+			image.setPixelVal(i, (j - 1) / 2, temp);
+		}
+	}
 }
 
 /* 
