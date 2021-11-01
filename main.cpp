@@ -28,6 +28,7 @@ void part1(bool b);
 void fft2d(float **data, int size, unsigned long nn, int isign);
 void imgtodata(ImageType &image, float **data);
 void datatoimg(ImageType &image, float **data);
+void sq(int size);
 
 int main(int argc, char *argv[])
 {
@@ -49,24 +50,51 @@ int main(int argc, char *argv[])
 	part1(false);
 
 	// Part 2
-	ImageType finImage(256, 256, 255);
-	readImage(lenna, finImage);
-	float **data = new float *[256];
+	sq(21);
+}
 
-	for (int i = 0; i < 256; i++)
+void sq(int size)
+{
+	// Create Square in center
+	ImageType sqImage(512, 512, 255);
+	for (int i = 0; i < 512; i++)
 	{
-		data[i] = new float[513];
+		for (int j = 0; j < 512; j++)
+		{
+			if ((i > (512 / 2 - size / 2)) && (i <= (512 - 512 / 2 + size / 2)) && (j > (512 / 2 - size / 2)) && (j <= (512 - 512 / 2 + size / 2)))
+			{
+				sqImage.setPixelVal(i, j, 255);
+			}
+			else
+			{
+				sqImage.setPixelVal(i, j, 0);
+			}
+		}
 	}
 
-	imgtodata(finImage, data);
-	//cout << "forward" << endl << endl;
-	fft2d(data, 256, 256, -1);
-	//cout << "inverse" << endl << endl;
-	fft2d(data, 256, 256, 1);
-	datatoimg(finImage, data);
+	// Convert image to data
+	float **data = new float *[512];
+	for (int i = 0; i < 512; i++)
+	{
+		data[i] = new float[512 * 2 + 1];
+	}
+	imgtodata(sqImage, data);
 
-	char fname[] = "part2.pgm";
-	writeImage(fname, finImage);
+	// Calculate 2DFFt
+	fft2d(data, 512, 512, -1);
+
+	// Shift image
+	for (int i = 0; i < 512; i++)
+	{
+		// data[i] = data[i] * pow(-1, i + j);
+	}
+
+	// Export final image
+	char fname[] = "sq_XX.pgm";
+	fname[4] = '0' + size;
+
+	datatoimg(sqImage, data);
+	writeImage(fname, sqImage);
 
 	for (int i = 0; i < 256; ++i)
 	{
