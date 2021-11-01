@@ -25,6 +25,8 @@ void fft(float data[], unsigned long nn, int isign);
 
 void part1(bool b);
 
+void fft2d(ImageType &image, int size, unsigned long nn, int isign);
+
 int main(int argc, char *argv[]) {
 
 
@@ -33,6 +35,7 @@ int main(int argc, char *argv[]) {
 	//1.a
 	float test[] = {0, 2, 0, 3, 0, 4, 0, 4, 0};
 	fft(test, 4, -1);
+	//fft(test, 4, 1);
 	for (int i = 1; i <= 8; i = i + 2){
 		test[i] = test[i] / 4;
 		test[i+1] = test[i+1] / 4;
@@ -182,4 +185,55 @@ void part1(bool b){
 	phafile.close();
 	reafile.close();
 	imafile.close();
+}
+
+void fft2d(float ** data, int size, unsigned long nn, int isign){
+	//create dynamic 2d arrays
+	float** colsdata = new float*[size];
+	for(int i = 0; i < size; ++i){
+    	colsdata[i] = new float[size * 2 + 1];
+	}
+	float** rowsdata = new float*[size];
+	for(int i = 0; i < size; ++i){
+    	rowsdata[i] = new float[size * 2 + 1];
+	}
+	//copy the image into a 2d array, flipped so the columns become the rows and vice versa
+	for (int i = 0; i < size; i++){
+		for (int j = 1; j < size * 2 + 1; j = j + 2){
+			colsdata[i][j] = data[(j - 1) / 2][2 * i + 1];
+			colsdata[i][j + 1] = data[(j - 1) / 2][2 * i + 1 + 1];
+		}
+	}
+	//perform 1d fft on each column
+	for (int i = 0; i < size; i++){
+		fft(colsdata[i], size, isign);
+	}
+	//flip back to the way it should be so we can transform the rows
+	for (int i = 0; i < size; i++){
+		for (int j = 1; j < size * 2 + 1; j = j + 2){
+			rowsdata[i][j] = colsdata[(j - 1) / 2][2 * i + 1];
+			rowsdata[i][j + 1] = colsdata[(j - 1) / 2][2 * i + 1 + 1];
+		}
+	}
+	//perform id fft on each row
+	for (int i = 0; i < size; i++){
+		fft(rowsdata[i], size, isign);
+	}
+	//copy to original array and do 1/N
+	for (int i = 0; i < size; i++){
+		for (int j = 1; i < size * 2 + 1; i = i + 2){
+			data[i][j] = rowsdata[i][j] / size;
+			data[i][j + 1] = rowsdata[i][j + 1] / size;
+		}
+	}
+	//delete the dynamic 2d arrays
+	for(int i = 0; i < size; ++i){
+    	delete[] colsdata[i];
+	}
+	delete[] colsdata;
+	for(int i = 0; i < size; ++i){
+    	delete[] rowsdata[i];
+	}
+	delete[] rowsdata;
+
 }
