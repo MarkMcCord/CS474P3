@@ -30,12 +30,16 @@ void fft2d(int N, int M, double ** real_fuv, double ** image_fuv, int isign);
 // void fft2d(float **data, int size, unsigned long nn, int isign);
 void imgtodata(ImageType &image, float **data);
 void datatoimg(ImageType &image, float **data);
+void outputFromDoubles(int N, int M, double ** real_fuv, double ** image_fuv, char fname[]);
+
+
 void sq(int size);
+
+void part3(char fname[], bool parta);
 
 int main(int argc, char *argv[])
 {
 
-	char lenna[]   = "lenna.pgm";
 /*
 	//1.a 
 	float test[] = {0, 2, 0, 3, 0, 4, 0, 4, 0};
@@ -56,7 +60,12 @@ int main(int argc, char *argv[])
 
 	// Part 2
 	// sq(32);
-	char testname[] = "sq_0x.pgm";
+	char testname[] = "sq_0x.pgm";\
+
+	//3.a
+	char lenna[]   = "lenna.pgm";
+	part3(lenna, true);
+	part3(lenna, false);
 	
 }
 
@@ -91,6 +100,102 @@ void test2dfft(){
 
 	fft2d(256, 256, real_fuv, image_fuv, -1);
 	fft2d(256, 256, real_fuv, image_fuv, 1);
+
+	for(int i = 0; i < 256; ++i){
+    	delete[] real_fuv[i];
+	}
+	delete[] real_fuv;
+	for(int i = 0; i < 256; ++i){
+    	delete[] image_fuv[i];
+	}
+	delete[] image_fuv;
+}
+
+void part3(char fname[], bool parta){
+	ImageType testimage(256, 256, 255);
+	readImage(fname, testimage);
+
+	double **real_fuv = new double *[256];
+	for (int i = 0; i < 256; i++)
+	{
+		real_fuv[i] = new double[256 * 2 + 1];
+	}	
+	double **image_fuv = new double *[256];
+	for (int i = 0; i < 256; i++)
+	{
+		image_fuv[i] = new double[256 * 2 + 1];
+	}
+
+	int temp;
+	for (int i = 0; i < 256; i++)
+	{
+		for (int j = 0; j < 256; j++)
+		{
+			testimage.getPixelVal(i, j, temp);
+			real_fuv[i][j] = temp;
+			image_fuv[i][j] = 0;
+		}
+	}
+
+	fft2d(256, 256, real_fuv, image_fuv, -1);
+
+	char name[] = "only_iii_lenna.pgm";
+	if(parta){
+		name[5] = 'm';
+		name[6] = 'a';
+		name[7] = 'g';
+		for (int i = 0; i < 256; i++){
+			for (int j = 0; j < 256; j++){
+				real_fuv[i][j] = sqrt((real_fuv[i][j] * real_fuv[i][j]) + (image_fuv[i][j] * image_fuv[i][j]));
+				image_fuv[i][j] = 0;
+			}
+		}
+		fft2d(256, 256, real_fuv, image_fuv, 1);
+	}
+	if(!parta){
+		name[5] = 'p';
+		name[6] = 'h';
+		name[7] = 'a';
+		for (int i = 0; i < 256; i++){
+			for (int j = 0; j < 256; j++){
+				real_fuv[i][j] = cos(atan2(image_fuv[i][j], real_fuv[i][j]));
+				image_fuv[i][j] = sin(atan2(image_fuv[i][j], real_fuv[i][j]));
+			}
+		}
+		fft2d(256, 256, real_fuv, image_fuv, 1);
+
+		//normalizing stuff
+		int rmax = real_fuv[0][0];
+		int rmin = real_fuv[0][0];
+		int imax = image_fuv[0][0];
+		int imin = image_fuv[0][0];
+		for (int i = 0; i < 256; i++){
+			for (int j = 0; j < 256; j++){
+				if(real_fuv[i][j] > rmax){
+					rmax = real_fuv[i][j];
+				}
+				if(real_fuv[i][j] < rmin){
+					rmin = real_fuv[i][j];
+				}
+				if(image_fuv[i][j] > imax){
+					imax = image_fuv[i][j];
+				}
+				if(image_fuv[i][j] < imin){
+					imin = image_fuv[i][j];
+				}
+			}
+		}
+		for (int i = 0; i < 256; i++){
+			for (int j = 0; j < 256; j++){
+				real_fuv[i][j] = 255 * (real_fuv[i][j] - rmin) / (rmax - rmin);
+				image_fuv[i][j] = 255 * (image_fuv[i][j] - imin) / (imax - imin);
+			}
+		}
+		
+	}
+
+
+	outputFromDoubles(256, 256, real_fuv, image_fuv, name);
 
 	for(int i = 0; i < 256; ++i){
     	delete[] real_fuv[i];
@@ -183,6 +288,35 @@ void datatoimg(ImageType &image, float **data)
 			image.setPixelVal(i, (j - 1) / 2, temp);
 		}
 	}
+}
+
+void outputFromDoubles(int N, int M, double ** real_fuv, double ** image_fuv, char fname[]){
+
+	float **data = new float *[N];
+
+	for (int i = 0; i < N; i++)
+	{
+		data[i] = new float[M * 2 + 1];
+	}
+
+	// Initialize data with values
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 1; j < M * 2 + 1; j += 2)
+		{
+			data[i][j] = real_fuv[i][(j - 1) / 2];
+			data[i][j + 1] = image_fuv[i][(j - 1) / 2];
+		}
+	}
+
+	ImageType final(N, M, 255);
+	datatoimg(final, data);
+	writeImage(fname, final);
+
+	for(int i = 0; i < N; ++i){
+    	delete[] data[i];
+	}
+	delete[] data;
 }
 
 /* 
