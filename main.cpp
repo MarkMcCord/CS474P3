@@ -13,7 +13,7 @@
 
 #include <math.h>
 #define SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
-# define M_PI           3.14159265358979323846  /* pi */
+#define M_PI 3.14159265358979323846 /* pi */
 
 #include "image.h"
 
@@ -34,6 +34,7 @@ void outputFromDoubles(int N, int M, double ** real_fuv, double ** image_fuv, ch
 
 
 void sq(int size);
+void part2(char fname[]);
 
 void part3(char fname[], bool parta);
 
@@ -55,18 +56,20 @@ int main(int argc, char *argv[])
 	//  part1(true);
 	//  part1(false);
 
-	//testing the 2d fft
-	test2dfft();
+// testing the 2d fft
+// test2dfft();
 
-	// Part 2
-	// sq(32);
-	char testname[] = "sq_0x.pgm";\
+// Part 2
+sq(32);
+sq(64);
+sq(128);
+char testname[] = "sq_32.pgm";
+part2(testname);
 
-	//3.a
-	char lenna[]   = "lenna.pgm";
-	part3(lenna, true);
-	part3(lenna, false);
-	
+// 3.a
+char lenna[] = "lenna.pgm";
+part3(lenna, true);
+part3(lenna, false);
 }
 
 void test2dfft(){
@@ -98,6 +101,7 @@ void test2dfft(){
 		}
 	}
 
+	// Call 2DFFT
 	fft2d(256, 256, real_fuv, image_fuv, -1);
 	fft2d(256, 256, real_fuv, image_fuv, 1);
 
@@ -107,6 +111,82 @@ void test2dfft(){
 	delete[] real_fuv;
 	for(int i = 0; i < 256; ++i){
     	delete[] image_fuv[i];
+	}
+	delete[] image_fuv;
+}
+
+void part2(char fname[])
+{
+	ImageType baseImage(512, 512, 255);
+	readImage(fname, baseImage);
+
+	double **real_fuv = new double *[512];
+	for (int i = 0; i < 512; i++)
+	{
+		real_fuv[i] = new double[256 * 2 + 1];
+	}
+	double **image_fuv = new double *[512];
+	for (int i = 0; i < 512; i++)
+	{
+		image_fuv[i] = new double[512 * 2 + 1];
+	}
+
+	int temp;
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j++)
+		{
+			baseImage.getPixelVal(i, j, temp);
+			real_fuv[i][j] = temp;
+			image_fuv[i][j] = 0;
+		}
+	}
+
+	// Call 2DFFT
+	fft2d(512, 512, real_fuv, image_fuv, -1);
+
+	float magnitude[512][512];
+	// Calculate magnitude
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j += 2)
+		{
+			magnitude[i][j] = sqrt(real_fuv[i][j] * real_fuv[i][j] + image_fuv[i][j] + image_fuv[i][j]);
+		}
+	}
+
+	// Shift magnitude to the center
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j += 2)
+		{
+			magnitude[i][j] = magnitude[i][j];
+		}
+	}
+
+	char tempname[] = "test.pgm";
+	ImageType final(512, 512, 255);
+
+	int temp2;
+	// Write to image
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j += 2)
+		{
+			temp2 = magnitude[i][j];
+			final.setPixelVal(i, j, temp2);
+		}
+	}
+	writeImage(tempname, final);
+
+	for (int i = 0; i < 512; ++i)
+	{
+		delete[] real_fuv[i];
+	}
+	delete[] real_fuv;
+	for (int i = 0; i < 512; ++i)
+	{
+		delete[] image_fuv[i];
 	}
 	delete[] image_fuv;
 }
@@ -226,37 +306,22 @@ void sq(int size)
 		}
 	}
 
-	// Convert image to data
-	float **data = new float *[512];
-	for (int i = 0; i < 512; i++)
-	{
-		data[i] = new float[512 * 2 + 1];
-	}
-
-	imgtodata(sqImage, data);
-
-	// Calculate 2DFFt
-	// fft2d(512, 512, real_fuv, image_fuv, -1);
-
-	// Shift image
-	for (int i = 0; i < 512; i++)
-	{
-		// data[i] = data[i] * pow(-1, i + j);
-	}
-
 	// Export final image
-	char fname[] = "sq_XX.pgm";
-	fname[3] = '0' + 0;
-
-	datatoimg(sqImage, data);
-	writeImage(fname, sqImage);
-
-	for (int i = 0; i < 256; ++i)
+	if (size == 32)
 	{
-		delete[] data[i];
+		char fname[] = "sq_32.pgm";
+		writeImage(fname, sqImage);
 	}
-
-	delete[] data;
+	else if (size == 64)
+	{
+		char fname[] = "sq_64.pgm";
+		writeImage(fname, sqImage);
+	}
+	else if (size == 128)
+	{
+		char fname[] = "sq_128.pgm";
+		writeImage(fname, sqImage);
+	}
 }
 
 void imgtodata(ImageType &image, float **data)
