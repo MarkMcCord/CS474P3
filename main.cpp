@@ -25,7 +25,8 @@ void fft(float data[], unsigned long nn, int isign);
 
 void part1(bool b);
 
-void fft2d(float **data, int size, unsigned long nn, int isign);
+void fft2d(int N, int M, double real_fuv[512][512], double image_fuv[512][512], int isign);
+// void fft2d(float **data, int size, unsigned long nn, int isign);
 void imgtodata(ImageType &image, float **data);
 void datatoimg(ImageType &image, float **data);
 void sq(int size);
@@ -45,12 +46,31 @@ int main(int argc, char *argv[])
 		cout << test[i] << " " << test[i+1] << endl;
 	}
 */
-	//1.b and 1.c
-	part1(true);
-	part1(false);
+	// 1.b and 1.c
+	//  part1(true);
+	//  part1(false);
 
 	// Part 2
-	sq(21);
+	// sq(32);
+	ImageType testimage(512, 512, 255);
+	char testname[] = "sq_0x.pgm";
+	readImage(testname, testimage);
+	double real_fuv[512][512];
+	double image_fuv[512][512];
+
+	int temp;
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 1; j < 512; j++)
+		{
+			testimage.getPixelVal(i, j, temp);
+			real_fuv[i][j] = temp;
+			image_fuv[i][j] = 0;
+		}
+	}
+
+	fft2d(512, 512, real_fuv, image_fuv, -1);
+	fft2d(512, 512, real_fuv, image_fuv, 1);
 }
 
 void sq(int size)
@@ -78,10 +98,11 @@ void sq(int size)
 	{
 		data[i] = new float[512 * 2 + 1];
 	}
+
 	imgtodata(sqImage, data);
 
 	// Calculate 2DFFt
-	fft2d(data, 512, 512, -1);
+	// fft2d(512, 512, real_fuv, image_fuv, -1);
 
 	// Shift image
 	for (int i = 0; i < 512; i++)
@@ -91,7 +112,7 @@ void sq(int size)
 
 	// Export final image
 	char fname[] = "sq_XX.pgm";
-	fname[4] = '0' + size;
+	fname[3] = '0' + 0;
 
 	datatoimg(sqImage, data);
 	writeImage(fname, sqImage);
@@ -121,9 +142,9 @@ void imgtodata(ImageType &image, float **data)
 void datatoimg(ImageType &image, float **data)
 {
 	int temp = 0;
-	for (int i = 0; i < 256; i++)
+	for (int i = 0; i < 512; i++)
 	{
-		for (int j = 1; j < 513; j += 2)
+		for (int j = 1; j < 1025; j += 2)
 		{
 			temp = data[i][j];
 			image.setPixelVal(i, (j - 1) / 2, temp);
@@ -268,7 +289,27 @@ void part1(bool b){
 	imafile.close();
 }
 
-void fft2d(float ** data, int size, unsigned long nn, int isign){
+// void fft2d(float **data, int size, unsigned long nn, int isign)
+void fft2d(int N, int M, double real_fuv[][512], double image_fuv[][512], int isign)
+{
+	float **data = new float *[512];
+	int size = N;
+
+	for (int i = 0; i < 512; i++)
+	{
+		data[i] = new float[1025];
+	}
+
+	// Initialize data with values
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 1; j < 512 * 2 + 1; j += 2)
+		{
+			data[i][j] = real_fuv[i][(j - 1) / 2];
+			data[i][j + 1] = 0;
+		}
+	}
+
 	//create dynamic 2d arrays
 	float** colsdata = new float*[size];
 	for(int i = 0; i < size; ++i){
@@ -278,36 +319,62 @@ void fft2d(float ** data, int size, unsigned long nn, int isign){
 	for(int i = 0; i < size; ++i){
     	rowsdata[i] = new float[size * 2 + 1];
 	}
-	//copy the image into a 2d array, flipped so the columns become the rows and vice versa
-	for (int i = 0; i < size; i++){
-		for (int j = 1; j < size * 2 + 1; j = j + 2){
-			colsdata[i][j] = data[(j - 1) / 2][2 * i + 1];
-			colsdata[i][j + 1] = data[(j - 1) / 2][2 * i + 1 + 1];
+
+	// //copy the image into a 2d array, flipped so the columns become the rows and vice versa
+	// for (int i = 0; i < size; i++){
+	// 	for (int j = 1; j < size * 2 + 1; j = j + 2){
+	// 		colsdata[i][j] = data[(j - 1) / 2][2 * i + 1];
+	// 		colsdata[i][j + 1] = data[(j - 1) / 2][2 * i + 1 + 1];
+	// 	}
+	// }
+
+	// //perform 1d fft on each column
+	// for (int i = 0; i < size; i++){
+	// 	fft(colsdata[i], size, isign);
+	// }
+
+	// //flip back to the way it should be so we can transform the rows
+	// for (int i = 0; i < size; i++){
+	// 	for (int j = 1; j < size * 2 + 1; j = j + 2){
+	// 		rowsdata[i][j] = colsdata[(j - 1) / 2][2 * i + 1];
+	// 		rowsdata[i][j + 1] = colsdata[(j - 1) / 2][2 * i + 1 + 1];
+	// 	}
+	// }
+
+	// //perform id fft on each row
+	// for (int i = 0; i < size; i++){
+	// 	fft(rowsdata[i], size, isign);
+	// }
+
+	// //copy to original array and do 1/N
+	// for (int i = 0; i < size; i++){
+	// 	for (int j = 1; j < size * 2 + 1; j = j + 2){
+	// 		data[i][j] = rowsdata[i][j] / size;
+	// 		data[i][j + 1] = rowsdata[i][j + 1] / size;
+	// 		//cout << data[i][j] << " " << data[i][j + 1] << endl;
+	// 	}
+	// }
+
+	// copy from data to original arrays
+	for (int i = 0; i < size; i++)
+	{
+		for (int j = 1; j < size * 2 + 1; j = j + 2)
+		{
+			real_fuv[i][(j - 1) / 2] = data[i][j];
+			image_fuv[i][(j + 1) / 2] = data[i][j + 1];
+			// cout << data[i][j] << " " << data[i][j + 1] << endl;
 		}
 	}
-	//perform 1d fft on each column
-	for (int i = 0; i < size; i++){
-		fft(colsdata[i], size, isign);
+
+	// Checking if the inverse worked
+	if (isign == 1)
+	{
+		ImageType final(512, 512, 255);
+		datatoimg(final, data);
+		char fft2dtest[] = "test2dfft.pgm";
+		writeImage(fft2dtest, final);
 	}
-	//flip back to the way it should be so we can transform the rows
-	for (int i = 0; i < size; i++){
-		for (int j = 1; j < size * 2 + 1; j = j + 2){
-			rowsdata[i][j] = colsdata[(j - 1) / 2][2 * i + 1];
-			rowsdata[i][j + 1] = colsdata[(j - 1) / 2][2 * i + 1 + 1];
-		}
-	}
-	//perform id fft on each row
-	for (int i = 0; i < size; i++){
-		fft(rowsdata[i], size, isign);
-	}
-	//copy to original array and do 1/N
-	for (int i = 0; i < size; i++){
-		for (int j = 1; j < size * 2 + 1; j = j + 2){
-			data[i][j] = rowsdata[i][j] / size;
-			data[i][j + 1] = rowsdata[i][j + 1] / size;
-			//cout << data[i][j] << " " << data[i][j + 1] << endl;
-		}
-	}
+
 	//delete the dynamic 2d arrays
 	for(int i = 0; i < size; ++i){
     	delete[] colsdata[i];
@@ -317,5 +384,4 @@ void fft2d(float ** data, int size, unsigned long nn, int isign){
     	delete[] rowsdata[i];
 	}
 	delete[] rowsdata;
-
 }
