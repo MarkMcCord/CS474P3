@@ -123,7 +123,7 @@ void part2(char fname[])
 	double **real_fuv = new double *[512];
 	for (int i = 0; i < 512; i++)
 	{
-		real_fuv[i] = new double[256 * 2 + 1];
+		real_fuv[i] = new double[512 * 2 + 1];
 	}
 	double **image_fuv = new double *[512];
 	for (int i = 0; i < 512; i++)
@@ -142,41 +142,77 @@ void part2(char fname[])
 		}
 	}
 
+	// Translation
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j++)
+		{
+			real_fuv[i][j] = real_fuv[i][j] * pow(-1, i + j);
+			image_fuv[i][j] = image_fuv[i][j] * pow(-1, i + j);
+		}
+	}
+
 	// Call 2DFFT
 	fft2d(512, 512, real_fuv, image_fuv, -1);
 
-	float magnitude[512][512];
+	double magnitude[512][512];
 	// Calculate magnitude
 	for (int i = 0; i < 512; i++)
 	{
-		for (int j = 0; j < 512; j += 2)
+		for (int j = 0; j < 512; j++)
 		{
 			magnitude[i][j] = sqrt(real_fuv[i][j] * real_fuv[i][j] + image_fuv[i][j] + image_fuv[i][j]);
 		}
 	}
 
-	// Shift magnitude to the center
+	// Apply Log for better visualization
 	for (int i = 0; i < 512; i++)
 	{
-		for (int j = 0; j < 512; j += 2)
+		for (int j = 0; j < 512; j++)
 		{
-			magnitude[i][j] = magnitude[i][j];
+			magnitude[i][j] = log(1 + magnitude[i][j]);
 		}
 	}
 
 	char tempname[] = "test.pgm";
 	ImageType final(512, 512, 255);
 
+	// Normalization
+	float rmax = magnitude[0][0];
+	float rmin = magnitude[0][0];
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j++)
+		{
+			if (magnitude[i][j] > rmax)
+			{
+				rmax = magnitude[i][j];
+			}
+			if (magnitude[i][j] < rmin)
+			{
+				rmin = magnitude[i][j];
+			}
+		}
+	}
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j++)
+		{
+			magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+		}
+	}
+
 	int temp2;
 	// Write to image
 	for (int i = 0; i < 512; i++)
 	{
-		for (int j = 0; j < 512; j += 2)
+		for (int j = 0; j < 512; j++)
 		{
 			temp2 = magnitude[i][j];
 			final.setPixelVal(i, j, temp2);
 		}
 	}
+
 	writeImage(tempname, final);
 
 	for (int i = 0; i < 512; ++i)
