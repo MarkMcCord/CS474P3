@@ -32,10 +32,8 @@ void imgtodata(ImageType &image, float **data);
 void datatoimg(ImageType &image, float **data);
 void outputFromDoubles(int N, int M, double ** real_fuv, double ** image_fuv, char fname[]);
 
-
 void sq(int size);
-void part2(char fname[]);
-
+void part2(char fname[], int size);
 void part3(char fname[], bool parta);
 
 int main(int argc, char *argv[])
@@ -63,8 +61,12 @@ int main(int argc, char *argv[])
 sq(32);
 sq(64);
 sq(128);
-char testname[] = "sq_32.pgm";
-part2(testname);
+char sq32[] = "sq_32.pgm";
+char sq64[] = "sq_64.pgm";
+char sq128[] = "sq_128.pgm";
+part2(sq32, 32);
+part2(sq64, 64);
+part2(sq128, 128);
 
 // 3.a
 char lenna[] = "lenna.pgm";
@@ -115,7 +117,7 @@ void test2dfft(){
 	delete[] image_fuv;
 }
 
-void part2(char fname[])
+void part2(char fname[], int size)
 {
 	ImageType baseImage(512, 512, 255);
 	readImage(fname, baseImage);
@@ -174,46 +176,135 @@ void part2(char fname[])
 		}
 	}
 
-	char tempname[] = "test.pgm";
-	ImageType final(512, 512, 255);
-
-	// Normalization
-	float rmax = magnitude[0][0];
-	float rmin = magnitude[0][0];
-	for (int i = 0; i < 512; i++)
+	if (size == 32)
 	{
-		for (int j = 0; j < 512; j++)
+		char tempname[] = "fft_32.pgm";
+		ImageType final(512, 512, 255);
+
+		// Normalization
+		float rmax = magnitude[0][0];
+		float rmin = magnitude[0][0];
+		for (int i = 0; i < 512; i++)
 		{
-			if (magnitude[i][j] > rmax)
+			for (int j = 0; j < 512; j++)
 			{
-				rmax = magnitude[i][j];
+				if (magnitude[i][j] > rmax)
+				{
+					rmax = magnitude[i][j];
+				}
+				if (magnitude[i][j] < rmin)
+				{
+					rmin = magnitude[i][j];
+				}
 			}
-			if (magnitude[i][j] < rmin)
+		}
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
 			{
-				rmin = magnitude[i][j];
+				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
 			}
 		}
-	}
-	for (int i = 0; i < 512; i++)
-	{
-		for (int j = 0; j < 512; j++)
-		{
-			magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
-		}
-	}
 
-	int temp2;
-	// Write to image
-	for (int i = 0; i < 512; i++)
-	{
-		for (int j = 0; j < 512; j++)
+		int temp2;
+		// Write to image
+		for (int i = 0; i < 512; i++)
 		{
-			temp2 = magnitude[i][j];
-			final.setPixelVal(i, j, temp2);
+			for (int j = 0; j < 512; j++)
+			{
+				temp2 = magnitude[i][j];
+				final.setPixelVal(i, j, temp2);
+			}
 		}
-	}
 
-	writeImage(tempname, final);
+		writeImage(tempname, final);
+	}
+	else if (size == 64)
+	{
+		char tempname[] = "fft_64.pgm";
+		ImageType final(512, 512, 255);
+
+		// Normalization
+		float rmax = magnitude[0][0];
+		float rmin = magnitude[0][0];
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				if (magnitude[i][j] > rmax)
+				{
+					rmax = magnitude[i][j];
+				}
+				if (magnitude[i][j] < rmin)
+				{
+					rmin = magnitude[i][j];
+				}
+			}
+		}
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+			}
+		}
+
+		int temp2;
+		// Write to image
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				temp2 = magnitude[i][j];
+				final.setPixelVal(i, j, temp2);
+			}
+		}
+
+		writeImage(tempname, final);
+	}
+	if (size == 128)
+	{
+		char tempname[] = "fft_128.pgm";
+		ImageType final(512, 512, 255);
+
+		// Normalization
+		float rmax = magnitude[0][0];
+		float rmin = magnitude[0][0];
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				if (magnitude[i][j] > rmax)
+				{
+					rmax = magnitude[i][j];
+				}
+				if (magnitude[i][j] < rmin)
+				{
+					rmin = magnitude[i][j];
+				}
+			}
+		}
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+			}
+		}
+
+		int temp2;
+		// Write to image
+		for (int i = 0; i < 512; i++)
+		{
+			for (int j = 0; j < 512; j++)
+			{
+				temp2 = magnitude[i][j];
+				final.setPixelVal(i, j, temp2);
+			}
+		}
+
+		writeImage(tempname, final);
+	}
 
 	for (int i = 0; i < 512; ++i)
 	{
