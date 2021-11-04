@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
 	}
 */
 	// 1.b and 1.c
-	//  part1(true);
-	//  part1(false);
+	  part1(true);
+	  part1(false);
 
 // testing the 2d fft
 // test2dfft();
@@ -604,10 +604,11 @@ void part1(bool b){
 			file << data[i] << endl;
 		}
 		for (int i = 65; i < 193; i = i + 2){
-			data[i] = 1 * pow(-1, i/2);
+			data[i] = 1;
 			data[i + 1] = 0;
 			//cout << data[i] << " " << data[i + 1] << endl;
 			file << data[i] << endl;
+			data[i] = data[i] * pow(-1, i/2);
 		}
 		for (int i = 193; i < 257; i = i + 2){
 			data[i] = 0;
