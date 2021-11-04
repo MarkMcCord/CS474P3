@@ -144,7 +144,21 @@ void part2(char fname[], int size)
 		}
 	}
 
-	// Translation
+	// FFT2D for no shift
+	fft2d(512, 512, real_fuv, image_fuv, -1);
+	// Spectrum no shift
+	double spectrum[512][512];
+	for (int i = 0; i < 512; i++)
+	{
+		for (int j = 0; j < 512; j++)
+		{
+			spectrum[i][j] = sqrt(real_fuv[i][j] * real_fuv[i][j] + image_fuv[i][j] + image_fuv[i][j]);
+		}
+	}
+	// Inverse for shift
+	fft2d(512, 512, real_fuv, image_fuv, 1);
+
+	// Shift the spectrum
 	for (int i = 0; i < 512; i++)
 	{
 		for (int j = 0; j < 512; j++)
@@ -173,17 +187,22 @@ void part2(char fname[], int size)
 		for (int j = 0; j < 512; j++)
 		{
 			magnitude[i][j] = log(1 + magnitude[i][j]);
+			spectrum[i][j] = log(1 + spectrum[i][j]);
 		}
 	}
 
 	if (size == 32)
 	{
 		char tempname[] = "fft_32.pgm";
+		char tempname2[] = "fft_unshifted_32.pgm";
 		ImageType final(512, 512, 255);
+		ImageType final2(512, 512, 255);
 
 		// Normalization
 		float rmax = magnitude[0][0];
 		float rmin = magnitude[0][0];
+		float rmax2 = spectrum[0][0];
+		float rmin2 = spectrum[0][0];
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
@@ -196,6 +215,14 @@ void part2(char fname[], int size)
 				{
 					rmin = magnitude[i][j];
 				}
+				if (spectrum[i][j] > rmax2)
+				{
+					rmax2 = spectrum[i][j];
+				}
+				if (spectrum[i][j] < rmin2)
+				{
+					rmin2 = spectrum[i][j];
+				}
 			}
 		}
 		for (int i = 0; i < 512; i++)
@@ -203,30 +230,39 @@ void part2(char fname[], int size)
 			for (int j = 0; j < 512; j++)
 			{
 				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+				spectrum[i][j] = 255 * (spectrum[i][j] - rmin2) / (rmax2 - rmin2);
 			}
 		}
 
 		int temp2;
+		int temp3;
 		// Write to image
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
 			{
+				temp3 = spectrum[i][j];
 				temp2 = magnitude[i][j];
 				final.setPixelVal(i, j, temp2);
+				final2.setPixelVal(i, j, temp3);
 			}
 		}
 
 		writeImage(tempname, final);
+		writeImage(tempname2, final2);
 	}
 	else if (size == 64)
 	{
 		char tempname[] = "fft_64.pgm";
+		char tempname2[] = "fft_unshifted_64.pgm";
 		ImageType final(512, 512, 255);
+		ImageType final2(512, 512, 255);
 
 		// Normalization
 		float rmax = magnitude[0][0];
 		float rmin = magnitude[0][0];
+		float rmax2 = spectrum[0][0];
+		float rmin2 = spectrum[0][0];
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
@@ -239,6 +275,14 @@ void part2(char fname[], int size)
 				{
 					rmin = magnitude[i][j];
 				}
+				if (spectrum[i][j] > rmax2)
+				{
+					rmax2 = spectrum[i][j];
+				}
+				if (spectrum[i][j] < rmin2)
+				{
+					rmin2 = spectrum[i][j];
+				}
 			}
 		}
 		for (int i = 0; i < 512; i++)
@@ -246,30 +290,39 @@ void part2(char fname[], int size)
 			for (int j = 0; j < 512; j++)
 			{
 				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+				spectrum[i][j] = 255 * (spectrum[i][j] - rmin2) / (rmax2 - rmin2);
 			}
 		}
 
 		int temp2;
+		int temp3;
 		// Write to image
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
 			{
+				temp3 = spectrum[i][j];
 				temp2 = magnitude[i][j];
 				final.setPixelVal(i, j, temp2);
+				final2.setPixelVal(i, j, temp3);
 			}
 		}
 
 		writeImage(tempname, final);
+		writeImage(tempname2, final2);
 	}
 	if (size == 128)
 	{
 		char tempname[] = "fft_128.pgm";
+		char tempname2[] = "fft_unshifted_128.pgm";
 		ImageType final(512, 512, 255);
+		ImageType final2(512, 512, 255);
 
 		// Normalization
 		float rmax = magnitude[0][0];
 		float rmin = magnitude[0][0];
+		float rmax2 = spectrum[0][0];
+		float rmin2 = spectrum[0][0];
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
@@ -282,6 +335,14 @@ void part2(char fname[], int size)
 				{
 					rmin = magnitude[i][j];
 				}
+				if (spectrum[i][j] > rmax2)
+				{
+					rmax2 = spectrum[i][j];
+				}
+				if (spectrum[i][j] < rmin2)
+				{
+					rmin2 = spectrum[i][j];
+				}
 			}
 		}
 		for (int i = 0; i < 512; i++)
@@ -289,21 +350,26 @@ void part2(char fname[], int size)
 			for (int j = 0; j < 512; j++)
 			{
 				magnitude[i][j] = 255 * (magnitude[i][j] - rmin) / (rmax - rmin);
+				spectrum[i][j] = 255 * (spectrum[i][j] - rmin2) / (rmax2 - rmin2);
 			}
 		}
 
 		int temp2;
+		int temp3;
 		// Write to image
 		for (int i = 0; i < 512; i++)
 		{
 			for (int j = 0; j < 512; j++)
 			{
+				temp3 = spectrum[i][j];
 				temp2 = magnitude[i][j];
 				final.setPixelVal(i, j, temp2);
+				final2.setPixelVal(i, j, temp3);
 			}
 		}
 
 		writeImage(tempname, final);
+		writeImage(tempname2, final2);
 	}
 
 	for (int i = 0; i < 512; ++i)
